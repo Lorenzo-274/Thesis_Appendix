@@ -7,7 +7,7 @@ import numpy as np
 import os
 import json
 import re
-import time # Aggiunto per la gestione dei ritardi nei tentativi
+import time # Added to handle delays between retries
 
 import tiktoken
 
@@ -18,14 +18,14 @@ def count_tokens(text, model="gpt-4o"):
 
 openai.api_key = "myOpenAI_key"
 
-# Percorsi dinamici (verranno richiesti all’utente in fase di esecuzione)
+# Dynamic paths (will be requested from the user at runtime)
 DEALS_PATH = "/Users/lorenzoloria/Desktop/multi_agent/annunci.xlsx"
 KNOWLEDGE_PATH = "/Users/lorenzoloria/Desktop/multi_agent/corrected_merged_direction_pvalue_counts.xlsx"
 LOG_DIR = "/Users/lorenzoloria/Desktop/multi_agent/logs"
 OUTPUT_PATH = "/Users/lorenzoloria/Desktop/multi_agent/predictions.xlsx"
 
-# Modello GPT da utilizzare (modificabile per controllo costi)
-GPT_MODEL = "gpt-4o" # Puoi cambiarlo in "gpt-3.5-turbo" per risparmiare
+# GPT model to use (can be changed to control costs)
+GPT_MODEL = "gpt-4o" 
 
 np.random.seed(42)
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -36,17 +36,17 @@ os.makedirs(LOG_DIR, exist_ok=True)
 deals_df = pd.read_excel(DEALS_PATH)
 knowledge_df = pd.read_excel(KNOWLEDGE_PATH)
 
-# Normalizza nomi colonne
+# Normalize column names
 knowledge_df.columns = [col.strip().lower() for col in knowledge_df.columns]
 
-# Controlla che la colonna 'variable' esista
+# Check that the 'variable' column exists
 if "variable" not in knowledge_df.columns:
     raise ValueError("La colonna 'variable' è mancante nel file della knowledge base.")
 
-# Porta a lowercase le variabili (evita errori nei match)
+# Convert variables to lowercase (prevents matching errors)
 knowledge_df["variable"] = knowledge_df["variable"].str.lower()
 
-# Crea una nuova colonna numerica di score dalla colonna 'p_value'
+# Create a new numeric score column from the 'p_value' column
 def extract_score(pval_str):
     if isinstance(pval_str, str):
         if "1%" in pval_str:
@@ -59,10 +59,10 @@ def extract_score(pval_str):
 
 knowledge_df["significance_score"] = knowledge_df["p_value"].apply(extract_score)
 
-# Filtra solo i segnali empiricamente attivi (source_column > 0)
+# Filter only empirically active signals (source_column > 0)
 knowledge_df = knowledge_df[knowledge_df["source_column"] > 0].copy()
 
-# Verifica che le colonne essenziali siano presenti nel file dei deal
+# Check that the essential columns are present in the deals file
 for col in ["id", "text"]:
     if col not in deals_df.columns:
         raise ValueError(f"Missing column: {col} in deals_df")
@@ -138,20 +138,20 @@ def format_semantic_signals(signals):
 
 # BLOCK 2D: INTEGRAZIONE KNOWLEDGE BASE NEL DATAFRAME
 
-# Filtra righe rilevanti (source_column > 0)
+# Filter relevant rows (source_column > 0)
 knowledge_df = knowledge_df[knowledge_df["source_column"] > 0].copy()
 
-# Normalizza i nomi delle variabili e direzioni
+# Normalize variable names and directions
 knowledge_df["variable"] = knowledge_df["variable"].str.lower()
 knowledge_df["direction"] = knowledge_df["direction"].str.lower()
 
-# Crea colonna tipo: 'premium_price_positive'
+# Create a column like: 'premium_price_positive'
 knowledge_df["kb_column"] = knowledge_df["variable"] + "_" + knowledge_df["direction"]
 
-# Combina forza empirica e significatività statistica
+# Combine empirical strength and statistical significance
 knowledge_df["combined_score"] = knowledge_df["source_column"] * knowledge_df["significance_score"]
 
-# Inizializza colonne nel dataframe dei deal
+# Initialize columns in the deals dataframe
 for colname in knowledge_df["kb_column"].unique():
     if colname not in deals_df.columns:
         deals_df[colname] = 0.0
@@ -171,7 +171,7 @@ for colname in knowledge_df["kb_column"].unique():
 # - mktcap_acquiror: in thousands of EUR (e.g., 1600 = €1.6 billion)
 
 
-# Definizione soglie per attivazione
+# Define thresholds for activation
 thresholds = {
     "premium_price": 0.30,
     "gov_index_acquiror": 7,
@@ -184,7 +184,7 @@ thresholds = {
        
 }
 
-# Applica logica di attivazione basata su soglie
+# Apply activation logic based on thresholds
 for _, row in knowledge_df.iterrows():
     base_var = row["variable"]
     direction = row["direction"]
@@ -192,7 +192,7 @@ for _, row in knowledge_df.iterrows():
     colname = row["kb_column"]
 
     if base_var in deals_df.columns:
-        threshold = thresholds.get(base_var, 0)  # soglia default = 0 se non specificata
+        threshold = thresholds.get(base_var, 0)  # Default threshold = 0 if not specified
 
         if direction == "positive":
             deals_df.loc[deals_df[base_var] > threshold, colname] = score
@@ -336,9 +336,9 @@ reasoning_guidance = (
 # BLOCK 4A: GPT CALLS AND KNOWLEDGE INTEGRATION (CON GESTIONE ERRORI)
 
 def gpt_call(prompt, model=GPT_MODEL, temperature=0.5, max_tokens=500):
-    """ Esegue una chiamata all'API di OpenAI con gestione degli errori e tentativi. """
+    """ Performs an OpenAI API call with error handling and retry attempts. """
     retries = 3
-    delay = 5  # secondi
+    delay = 5  # seconds
     for i in range(retries):
         try:
             response = openai.ChatCompletion.create(
@@ -349,27 +349,27 @@ def gpt_call(prompt, model=GPT_MODEL, temperature=0.5, max_tokens=500):
             )
             return response['choices'][0]['message']['content'].strip()
         except openai.error.RateLimitError as e:
-            print(f"Errore di Rate Limit. Attendo {delay} secondi prima di riprovare... ({i+1}/{retries})")
+            print(f"Rate limit error. Waiting {delay} seconds before retrying... ({i+1}/{retries})")
             time.sleep(delay)
-            delay *= 2 # Raddoppia l'attesa (exponential backoff)
+            delay *= 2 # Double the wait time (exponential backoff)
         except Exception as e:
-            print(f"Si è verificato un errore API: {e}. Tento di nuovo... ({i+1}/{retries})")
+            print(f"An API error occurred: {e}. Retrying... ({i+1}/{retries})")
             time.sleep(delay)
             delay *= 2
-    print(f"Impossibile ottenere una risposta dall'API dopo {retries} tentativi.")
-    return "ERRORE: Chiamata API fallita" # Valore di fallback in caso di fallimento
+    print(f"Unable to get a response from the API after {retries} attempts.")
+    return "ERROR: API call failed" # Valore di fallback in caso di fallimento
 
 def normalize(s):
     return re.sub(r"[\s_]+", "", s.strip().lower())
 
 def extract_empirical_signals(deal_vars):
     """
-    Estrae i segnali empirici attivati dalle variabili strutturate, con punteggio positivo o negativo.
+    Extracts the empirical signals triggered by structured variables, assigning either positive or negative scores.
     """
     signal_template = "- Variable: {var} → historically associated with {direction} CAR (value: {val:.2f})"
     signals = []
 
-    # Lista completa delle variabili monitorate
+    # Full list of monitored variables
     var_list = [
         "cash_payment_dummy", "gov_index_acquiror", "premium_price",
         "relative_target_size", "mktcap_acquiror", "leverage_acquiror",
@@ -397,7 +397,7 @@ def build_agent_prompt(role, deal_variables, round_specific_input, semantic_summ
         "as it affects expectations, risks, and norms around value creation.\n"
     )
 
-    # Contenuto selettivo per tipo di round
+    # Selective content based on round type
     
     if round_type == "Macro-Themes":
         info_block = (
@@ -419,7 +419,7 @@ def build_agent_prompt(role, deal_variables, round_specific_input, semantic_summ
         )
         
     else:
-        # fallback con tutto incluso
+        # Fallback with everything included
         extracted_theme_block = (
             "\n=== THEMES (Macro) ===\n" + "\n".join(extracted_facts) + "\n"
         ) if extracted_facts else ""
@@ -433,7 +433,7 @@ def build_agent_prompt(role, deal_variables, round_specific_input, semantic_summ
             f"\n=== EMPIRICAL GUIDANCE ===\n{empirical_guidance}\n"
         )
 
-    # Istruzione specifica per tipo di round
+    # Instruction specific to the round type
     round_instruction = {
         "Macro-Themes": (
             "Focus exclusively on the key factual elements of the deal, such as strategic rationales, synergies, payment type, premium, regulatory aspects, etc., "
@@ -450,7 +450,7 @@ def build_agent_prompt(role, deal_variables, round_specific_input, semantic_summ
         )
     }.get(round_type, "Use all available information.")
 
-    # Istruzione di ruolo
+    # Role-specific instruction
     task_instruction = {
         "Proponent": "As the Proponent, argue why this deal is likely to result in a positive total CAR.",
         "Opponent": "As the Opponent, argue why this deal may not generate value. Focus on risks and weaknesses.",
@@ -618,7 +618,7 @@ def manager_decision(proponent_argument, opponent_argument, expert_eval_pro, exp
         reasoning = parsed.get("reasoning", "").strip()
         number = float(parsed.get("probability", 50))
     except Exception:
-        # Fallback via regex se JSON non valido
+        # Fallback using regex if JSON is invalid
         reasoning_match = re.search(r'"reasoning"\s*:\s*"([^"]+)"', response)
         probability_match = re.search(r'"probability"\s*:\s*([0-9]{1,3}(?:\.\d+)?)', response)
 
@@ -627,7 +627,7 @@ def manager_decision(proponent_argument, opponent_argument, expert_eval_pro, exp
         if probability_match:
             number = float(probability_match.group(1))
 
-    # Clamp della probabilità in range [0, 100]
+    # Clamp probability to the range [0, 100]
     if not (0 <= number <= 100):
         number = 50.0
 
@@ -720,7 +720,7 @@ def run_debate_for_deal(deal_id, text, deal_vars, extracted_facts, deal, themes_
         elif expert_eval_pro["label"] == "Speculative" and expert_eval_opp["label"] == "Supported":
             prob -= 10
 
-        # Clamp tra 0 e 100 per evitare overflow
+        # Clamp between 0 and 100 to prevent overflow
         prob = max(0, min(100, prob))
 
 
@@ -741,7 +741,7 @@ def run_debate_for_deal(deal_id, text, deal_vars, extracted_facts, deal, themes_
 
         prev_prob = prob if prob is not None else prev_prob
         
-    # Calcola la media pesata dei round (peso maggiore al round empirico)
+    # Calculate the weighted average of rounds (giving more weight to the empirical round)
 
     weights = {
         "Macro-Themes": 1,
@@ -797,7 +797,7 @@ for idx, row in deals_df.iterrows():
 
     print(f"\n\n{'='*60}\nProcessing deal ID {deal_id}\n{'='*60}")
 
-    # 1. Estrazione dei fatti e analisi degli elementi mancanti
+    # 1. Extract facts and analyze missing elements
     print("Step 1: Extracting key facts from announcement...")
     facts_raw = extract_facts_llm(text)
     extracted_facts = validate_facts(facts_raw)
@@ -807,20 +807,20 @@ for idx, row in deals_df.iterrows():
     missing_elements = check_missing_elements(text)
     print(f"→ Elementi mancanti o vaghi: {', '.join(missing_elements)}")
 
-    # 2. Esecuzione del dibattito a round
+    # 2. Execute the round-based debate
     print("\nStep 3: Starting structured debate...")
     final_prob, final_reasoning, debate_history = run_debate_for_deal(
         deal_id, text, deal_vars, extracted_facts, deal, themes_guidance, semantic_guidance, empirical_guidance
     )
 
-    # 3. Salvataggio dei risultati
+    # 3. Save the results
     results.append({
         "id": deal_id,
         "final_probability": round(final_prob, 2) if final_prob is not None else None,
         "manager_reasoning": final_reasoning
     })
     
-    # 4. Salvataggio del log dettagliato per questa operazione
+    # 4. Save the detailed log for this operation
     log_path = os.path.join(LOG_DIR, f"{deal_id}_log.txt")
     with open(log_path, "w", encoding="utf-8") as f:
         f.write(f"DEAL ANALYSIS LOG - ID: {deal_id}\n")
@@ -850,7 +850,7 @@ for idx, row in deals_df.iterrows():
     
     print(f"\n Deal {deal_id} processed. Detailed log saved to {log_path}")
 
-# Salva risultati aggregati finali
+# Save final aggregated results
 final_df = pd.DataFrame(results)
 final_df.to_excel(OUTPUT_PATH, index=False)
 print(f"\n{'='*60}\nCompleted. Aggregated output saved to {OUTPUT_PATH}\n{'='*60}")
