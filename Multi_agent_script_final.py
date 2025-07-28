@@ -465,7 +465,7 @@ def build_agent_prompt(role, deal_variables, round_specific_input, semantic_summ
 def agent_argument(text, role, deal_vars, round_specific_input, semantic_summary,extracted_facts=None, missing_elements=None, round_type="General", themes_guidance=None, semantic_guidance=None, empirical_guidance=None):
     risk_summary = ""
     if missing_elements and missing_elements != ["None missing"]:
-        risk_summary = "\n\n⚠️ Warning: The following key elements are missing or vague in the announcement:\n- " + "\n- ".join(missing_elements)
+        risk_summary = "\n\n Warning: The following key elements are missing or vague in the announcement:\n- " + "\n- ".join(missing_elements)
 
     prompt = (
         build_agent_prompt(role, deal_vars, round_specific_input, semantic_summary, round_type=round_type, extracted_facts=extracted_facts, themes_guidance=themes_guidance, semantic_guidance=semantic_guidance, empirical_guidance=empirical_guidance) +
@@ -660,7 +660,7 @@ def run_debate_for_deal(deal_id, text, deal_vars, extracted_facts, deal, themes_
         print(f"- {key}: {grouped_themes[key]}")
 
     for i, (macro_theme, facts) in enumerate(grouped_themes.items()):
-        print(f"\n🔄 Round {i+1}/{len(grouped_themes)}: Debating topic category → {macro_theme}")
+        print(f"\n� Round {i+1}/{len(grouped_themes)}: Debating topic category → {macro_theme}")
 
         theme = "; ".join(facts) if isinstance(facts, list) else facts
 
