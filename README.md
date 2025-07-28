@@ -10,8 +10,9 @@ This repository contains the Python scripts and reasoning logs developed for the
 - **Input Data**
   - `M&A deals dataset.xlsx` – Anonymized dataset of M&A announcements used as input for the model.
     
-  - `knowledge_base_signals.xlsx` – Empirical knowledge base containing the key variables historically associated with cumulative abnormal returns (CAR) in M&A transactions. For        each variable, the file specifies:
-                                        - the expected direction of its impact on acquiror and/or target's CAR (positive or negative) on target 
+  - `knowledge_base_signals.xlsx` – Empirical knowledge base containing the key variables historically associated with CAR in M&A transactions.
+     For each variable, the file specifies:
+                                        - the expected direction of its impact on acquiror and/or target's CAR (positive or negative) 
                                         - the strength of the supporting empirical evidence (source count, p-values and relative significance_score).
 
     These variables are used by the multi-agent system as quantitative inputs: when the value of a variable in a given deal exceeds the activation thresholds (defined within           the Python script), the corresponding empirical signal is triggered and incorporated into the agents’ reasoning process during the evaluation of the deal.
