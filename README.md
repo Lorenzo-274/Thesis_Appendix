@@ -9,7 +9,7 @@ This repository contains the Python scripts and reasoning logs developed for the
 
 - **Code**
   - `Multi_agent_script_finale.py` – Full modular Python script implementing the multi-agent architecture (Proponent, Opponent, Expert, Manager) for predicting value creation in        M&A deals.
-  - `anonymization_M&A_deals_script.py` – Python script used to preprocess the original M&A deal announcements. It anonymizes company names, locations, and other identifiers,           and structures the resulting text for use by the multi-agent evaluation system. This step ensures that model predictions rely solely on strategic, semantic and empirical           features rather than firm-specific cues.
+  - `anonymization_M&A_deals_script.py` – Python script used to preprocess the original M&A deal announcements. It anonymizes company names, locations, and other identifiers,           and structures the resulting anonymized text for use by the multi-agent evaluation system. This step ensures that model predictions rely solely on strategic, semantic and   1      empirical features rather than firm-specific cues.
 
 - **Input Data**
   - `M&A deals dataset.xlsx` – Anonymized dataset of M&A announcements used as input for the model. This file contains both the anonymized texts of the deal announcements and the       empirical variables (e.g., firm- and deal-level characteristics) required by the multi-agent system for evaluation. The quantitative variables included here correspond to          those listed in the empirical knowledge base.
