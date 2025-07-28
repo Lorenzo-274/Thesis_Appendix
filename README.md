@@ -79,6 +79,7 @@ See `LICENSE` for details.
 
 ## Notes on Data Privacy
 
+- Sensitive data, such as original (non-anonymized) deal texts remain excluded due to confidentiality constraints.
 - Scripts and logs are provided to ensure transparency and reproducibility of the methodology.
 
 ---
