@@ -1,0 +1,91 @@
+{
+    "positive": {
+        "keywords": [
+            "integration",
+            "technologies",
+            "synergies",
+            "benefits",
+            "scale",
+            "international",
+            "innovation",
+            "player",
+            "opportunity",
+            "global",
+            "enterprise",
+            "platform",
+            "strategic",
+            "customer",
+            "complementary",
+            "core",
+            "strategy",
+            "expansion",
+            "leader",
+            "growth",
+            "transformation"
+        ],
+        "verbs": [
+            "enhance",
+            "drive",
+            "accelerate",
+            "realize",
+            "strengthen",
+            "generate",
+            "accelerate",
+            "expand",
+            "capitalize",
+            "enhancing",
+            "supported",
+            "conclude",
+            "deliver",
+            "positioned"
+        ],
+        "modals": [
+            "will",
+            "is going to"
+        ]
+    },
+    "negative": {
+        "keywords": [
+            "approval",
+            "information",
+            "uncertain",
+            "leverage",
+            "challenge",
+            "expenses",
+            "challenges",
+            "uncertainties",
+            "ambitious",
+            "minority",
+            "retain",
+            "obligations",
+            "regulatory",
+            "potential",
+            "conditions",
+            "potentially"
+        ],
+        "verbs": [
+            "expected",
+            "seeks to",
+            "foster",
+            "support",
+            "enable",
+            "intended",
+            "require",
+            "leverage",
+            "submitted",
+            "subject to",
+            "leveraging",
+            "fostering",
+            "retain",
+            "promoting",
+            "subjected"
+
+        ],
+        "modals": [
+            "could",
+            "would",
+            "may",
+            "might"
+        ]
+    }
+}
