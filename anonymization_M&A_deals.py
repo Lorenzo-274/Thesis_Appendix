@@ -84,7 +84,7 @@ for pdf_name in pdfs:
     try:
         tokens = count_tokens(prompt_base + text)
 
-        # A. NEUTRALIZZAZIONE
+        # A. ANONYMIZATION
         res_main = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -95,7 +95,7 @@ for pdf_name in pdfs:
         )
         out_text = clean_text(res_main.choices[0].message.content)
 
-        # B. INFERENZA SIC CODE E INDUSTRY
+        # B. INFERENCE OF SIC CODE AND INDUSTRY
         res_sic = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -106,7 +106,7 @@ for pdf_name in pdfs:
         )
         sic_text = clean_text(res_sic.choices[0].message.content)
 
-        # C. CREA PDF
+        # C. CREATE PDF
         pdf_out = os.path.join(out_dir, pdf_name.replace(".pdf", "_neutralized.pdf"))
         pdf = FPDF()
         pdf.add_page()
@@ -126,11 +126,11 @@ for pdf_name in pdfs:
     except Exception as e:
         print(f"Errore su {pdf_name}: {e}")
 
-# CSV con riepilogo
+# Summary CSV 
 csv_path = os.path.join(out_dir, "results.csv")
 pd.DataFrame(results).to_csv(csv_path, index=False)
 
-# ZIP di output
+# Output ZIP
 final_zip = os.path.join(tempfile.gettempdir(), "output_batch_neutralized.zip")
 with zipfile.ZipFile(final_zip, 'w') as zipf:
     for f in os.listdir(out_dir):
@@ -153,6 +153,6 @@ anonymized_data = pd.DataFrame({
 # Save to Excel
 excel_output_path = os.path.join(tempfile.gettempdir(), "anonymized_deals.xlsx")
 anonymized_data.to_excel(excel_output_path, index=False)
-print(f"✅ Anonymized deals saved to: {excel_output_path}")
+print(f" Anonymized deals saved to: {excel_output_path}")
 files.download(excel_output_path)
 
